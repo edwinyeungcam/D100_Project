@@ -156,3 +156,40 @@ def plot_pdp_for_top_features(model, X_train, y_train, top_n=5):
         plt.figure(figsize=(12, 8))  # Adjust figure size as needed
         pdp.plot(title=f"PDP for {feature}")
         plt.show()
+
+def plot_roc_auc_compare_models(model1, model2, X_test, y_test, model1_name="Model 1", model2_name="Model 2"):
+    """
+    Compute and plot the ROC-AUC curves for two models on the same graph.
+    
+    Parameters:
+        model1: First trained model used to predict probabilities.
+        model2: Second trained model used to predict probabilities.
+        X_test: Test feature set.
+        y_test: True labels for the test set.
+        model1_name: Name/label for the first model (used in the legend).
+        model2_name: Name/label for the second model (used in the legend).
+    """
+    # Predict probabilities for the positive class (1) for both models
+    y_test_pred_proba_1 = model1.predict_proba(X_test)[:, 1]
+    y_test_pred_proba_2 = model2.predict_proba(X_test)[:, 1]
+    
+    # Compute ROC curve and AUC score for both models
+    fpr1, tpr1, _ = roc_curve(y_test, y_test_pred_proba_1)
+    roc_auc1 = roc_auc_score(y_test, y_test_pred_proba_1)
+    
+    fpr2, tpr2, _ = roc_curve(y_test, y_test_pred_proba_2)
+    roc_auc2 = roc_auc_score(y_test, y_test_pred_proba_2)
+    
+    # Plot the ROC curves
+    plt.figure(figsize=(8, 6))
+    plt.plot(fpr1, tpr1, color='blue', label=f"{model1_name} (AUC = {roc_auc1:.2f})")
+    plt.plot(fpr2, tpr2, color='green', label=f"{model2_name} (AUC = {roc_auc2:.2f})")
+    plt.plot([0, 1], [0, 1], color='red', linestyle='--', label="Random Guess (AUC = 0.50)")
+    
+    # Add plot details
+    plt.title("ROC-AUC Curve Comparison")
+    plt.xlabel("False Positive Rate (FPR)")
+    plt.ylabel("True Positive Rate (TPR)")
+    plt.legend(loc="lower right")
+    plt.grid(alpha=0.3)
+    plt.show()

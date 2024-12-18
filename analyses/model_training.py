@@ -1,21 +1,19 @@
 # %%
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 import dalex as dx
 from pathlib import Path
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures, FunctionTransformer
+from sklearn.preprocessing import PolynomialFeatures, FunctionTransformer
 from sklearn.model_selection import GridSearchCV
 from data_split import split_data_randomly
-from evaluation import main_evaluation, plot_predicted_vs_actual, plot_roc_auc, plot_pdp_for_top_features
+from evaluation import main_evaluation, plot_predicted_vs_actual, plot_roc_auc, plot_pdp_for_top_features, plot_roc_auc_compare_models
+from min_max import CustomMinMaxScaler
 from lightgbm import LGBMClassifier
 
 # %%
-
 path = Path(__file__).parent.parent / "raw_data" / "cleaned_stratified_diabetes_prediction_dataset.csv"
 clean_df = pd.read_parquet(path)
 clean_df.head()
@@ -39,12 +37,12 @@ y_test = pd.DataFrame(test_df["diabetes"])  # Target column as DataFrame
 # %%
 preprocessor = ColumnTransformer(transformers=[
     # Step 1: Standardize age and bmi
-    ('first_scaler', MinMaxScaler(), ['age','bmi']),
+    ('first_scaler', CustomMinMaxScaler(), ['age','bmi']),
     
     # Step 2: Log-transform and standardize 'HbA1c_level' and 'blood_glucose_level'
     ('log_and_scale', Pipeline([
         ('log_transform', FunctionTransformer(np.log1p)),  # Apply log transformation
-        ('scaler', MinMaxScaler())  # Standardize
+        ('scaler', CustomMinMaxScaler()) 
     ]), ['HbA1c_level', 'blood_glucose_level']),
     
     # Step 3: Polynomial Features for 'bmi', 'HbA1c_level', 'blood_glucose_level' (After testing, no polynomial features lead to better accuracy)
@@ -119,8 +117,7 @@ pipeline
 #%%
 lgbm_grid_search = GridSearchCV(pipeline_lgbm_no_preprocessing, param_grid_lgbm, cv=5, scoring='accuracy')
 
-lgbm_grid_search.fit(X_train, y_train)  # Ensure this step is executed
-
+lgbm_grid_search.fit(X_train, y_train)
 
 #%%
 print(lgbm_grid_search.best_params_)
@@ -145,7 +142,12 @@ lgbm_explainer = dx.Explainer(lgbm_best_model, X_train, y_train, label="LightGBM
 # Feature importance
 lgbm_explainer.model_parts().plot()
 
+#%%
+# Compare the ROCAUC curve for the two models
+plot_roc_auc_compare_models(glm_best_model, lgbm_best_model, X_test, y_test, "GLM", "LGBM")
 
 # %%
-#PDP Plots
+# PDP Plots for top 5 features
 plot_pdp_for_top_features(lgbm_best_model, X_train, y_train, top_n=5)
+
+# %%

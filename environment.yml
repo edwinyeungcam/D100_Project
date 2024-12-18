@@ -1,0 +1,33 @@
+name: D100_project_env
+channels:
+  - conda-forge
+dependencies:
+  # Core Python
+  - python>=3.8
+  - pip
+  - pre-commit
+  - setuptools-scm
+
+  # Data Manipulation
+  - pandas
+  - numpy
+
+  # Parquet Support
+  - pyarrow
+
+  # Machine Learning
+  - scikit-learn
+  - lightgbm
+
+  # Visualization
+  - matplotlib
+  - seaborn
+
+  # Explainability
+  - dalex
+
+  # Testing
+  - pytest
+
+  # File Handling
+  - pathlib
