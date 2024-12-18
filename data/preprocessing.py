@@ -25,29 +25,63 @@ def check_binary_column(dataframe: pd.DataFrame, column: str) -> None:
         
     print()
 
-def check_missing_values(df: pd.DataFrame) -> dict:
+def check_missing_values(df: pd.DataFrame, columns: list) -> dict:
     """
-    Checks for missing values in each column of the DataFrame and returns a summary
-    Importantly, for smoking history, missing values are represented as "No Info", therefore the function will also search for "No Info"
+    Checks for missing values in the specified numerical columns of the DataFrame
+    and returns a summary.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing the data.
+        columns (list): List of column names to check for missing values.
+
+    Returns:
+        dict: A dictionary summarizing missing values for each column.
     """
-    missing_placeholders = ["No Info"]
-
-    df_copy = df.copy()
-
-    # Replace custom "No Info" with NaN
-    for placeholder in missing_placeholders:
-        df_copy = df_copy.replace(placeholder, pd.NA)
+    # Ensure only numerical columns are checked
+    numerical_columns = [col for col in columns if pd.api.types.is_numeric_dtype(df[col])]
 
     # Calculate missing values for each column
-    missing_count = df_copy.isnull().sum()
-    missing_percentage = (missing_count / len(df_copy)) * 100
+    missing_count = df[numerical_columns].isnull().sum()
+    missing_percentage = (missing_count / len(df)) * 100
 
     # Create a descriptive summary for each column
     report = {}
-    for column in df_copy.columns:
+    for column in numerical_columns:
         if missing_count[column] > 0:
             report[column] = f"Missing values ({missing_count[column]} = {missing_percentage[column]:.2f}%)"
         else:
             report[column] = "No missing values"
 
     return report
+
+def check_outliers(df: pd.DataFrame, columns: list) -> bool:
+    """
+    Checks whether outliers are present in a DataFrame using the IQR method.
+    """
+    outlier_results = {}
+    
+    for column in columns:
+        # Calculate IQR
+        Q1 = df[column].quantile(0.25)  
+        Q3 = df[column].quantile(0.75)  
+        IQR = Q3 - Q1                   
+        
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+
+        # Check if outliers exist in the column
+        has_outliers = ((df[column] < lower_bound) | (df[column] > upper_bound)).any()
+        outlier_results[column] = has_outliers
+
+    return outlier_results
+
+def display_unique_values(data, columns):
+    """
+    Display unique values from specified columns in the DataFrame.
+
+    Args:
+        data (pd.DataFrame): The DataFrame containing the data.
+        columns (list): List of column names to display unique values for.
+    """
+    for column in columns:
+        print(f"{column}: {data[column].unique()}")
