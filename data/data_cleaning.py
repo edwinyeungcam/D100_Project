@@ -1,20 +1,22 @@
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 
-def one_hot_encode_column(df, column_name):
+def one_hot_encode_column(df, column_name, drop_first=True):
     """
-    One-hot encodes a specified categorical column in a DataFrame.
+    One-hot encodes a specified categorical column in a DataFrame
+    while avoiding multicollinearity by optionally dropping one category.
 
     Args:
         df (pd.DataFrame): The input DataFrame.
         column_name (str): The name of the column to one-hot encode.
+        drop_first (bool): Whether to drop the first category to avoid multicollinearity.
 
     Returns:
         pd.DataFrame: A new DataFrame with the one-hot encoded column(s) added
                       and the original column dropped.
     """
     # Create an instance of OneHotEncoder
-    encoder = OneHotEncoder(sparse_output=False)  # Dense output for convenience
+    encoder = OneHotEncoder(sparse_output=False, drop="first" if drop_first else None)  # Drop first category if needed
 
     # Fit and transform the specified column
     encoded_array = encoder.fit_transform(df[[column_name]])
