@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder
 
-def one_hot_encode_column(df, column_name, drop_first=True):
+def one_hot_encode_column(df: pd.DataFrame, column_name: str, drop_first: bool =True) -> pd.DataFrame:
     """
     One-hot encodes a specified categorical column in a DataFrame
     while avoiding multicollinearity by optionally dropping one category.
