@@ -112,8 +112,6 @@ pipeline_lgbm_no_preprocessing = Pipeline(steps=[
     ('lgbm', lgbm)
 ])
 
-pipeline
-
 #%%
 lgbm_grid_search = GridSearchCV(pipeline_lgbm_no_preprocessing, param_grid_lgbm, cv=5, scoring='accuracy')
 
