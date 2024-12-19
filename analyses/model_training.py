@@ -14,11 +14,13 @@ from min_max import CustomMinMaxScaler
 from lightgbm import LGBMClassifier
 
 # %%
+# Load the stratified sampled data
 path = Path(__file__).parent.parent / "raw_data" / "cleaned_stratified_diabetes_prediction_dataset.csv"
 clean_df = pd.read_parquet(path)
 clean_df.head()
 
 # %%
+# Split the dataset
 train_test_df = split_data_randomly(clean_df)
 train_test_df.head()
 
@@ -27,14 +29,15 @@ train_df = pd.DataFrame(train_test_df[train_test_df["split"] == "train"])
 test_df = pd.DataFrame(train_test_df[train_test_df["split"] == "test"])
 
 # Separate features (X) and target (y) for training set
-X_train = pd.DataFrame(train_df.drop(columns=["diabetes", "split"]))  # Drop target and split columns
+X_train = pd.DataFrame(train_df.drop(columns=["diabetes", "split"])) 
 y_train = pd.DataFrame(train_df["diabetes"])  # Target column as DataFrame
 
 # Separate features (X) and target (y) for testing set
-X_test = pd.DataFrame(test_df.drop(columns=["diabetes", "split"]))  # Drop target and split columns
+X_test = pd.DataFrame(test_df.drop(columns=["diabetes", "split"]))  
 y_test = pd.DataFrame(test_df["diabetes"])  # Target column as DataFrame
 
 # %%
+# Define preprocessor
 preprocessor = ColumnTransformer(transformers=[
     # Step 1: Standardize age and bmi
     ('first_scaler', CustomMinMaxScaler(), ['age','bmi']),
@@ -113,6 +116,7 @@ pipeline_lgbm_no_preprocessing = Pipeline(steps=[
 ])
 
 #%%
+# Fit LGBM Model
 lgbm_grid_search = GridSearchCV(pipeline_lgbm_no_preprocessing, param_grid_lgbm, cv=5, scoring='accuracy')
 
 lgbm_grid_search.fit(X_train, y_train)
@@ -121,8 +125,10 @@ lgbm_grid_search.fit(X_train, y_train)
 print(lgbm_grid_search.best_params_)
 
 #%%
+# Get the best model from the grid search
 lgbm_best_model = lgbm_grid_search.best_estimator_
 
+# Evaluate model
 main_evaluation(lgbm_best_model, X_train, y_train, X_test, y_test, average='binary')
 
 #%%
